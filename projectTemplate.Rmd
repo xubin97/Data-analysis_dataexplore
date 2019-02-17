@@ -1,0 +1,415 @@
+红酒质量分析
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using
+# in your analysis in this code chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk.
+# This prevents the code from displaying in the knitted HTML output.
+# You should set echo=FALSE for all code chunks in your file.
+
+library(ggplot2)
+```
+
+```{r}
+knitr::opts_chunk$set(message=FALSE,warn=FALSE,echo=FALSE)
+```
+
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+setwd('D:/Uda_数据分析进阶/探索数据/项目')
+df=read.csv('wineQualityReds.csv')
+```
+###本报告探究的数据集包含1,599 种红酒，以及 11 个关于酒的化学成分的变量及1个其质量评分。
+# 单变量部分
+```{r echo=FALSE, Univariate_Plots}
+str(df)
+summary(df)
+
+```
+
+####我们这个数据集有13个变量，1599行数据组成。
+```{r}
+ggplot(aes(quality),data=df)+geom_histogram()+
+  ggtitle('quality shape')
+```
+
+####数据集中红酒的质量评分大多在5~7之间。
+```{r}
+ggplot(aes(alcohol),data=df)+geom_histogram()+
+  ggtitle('alcohol shape')+
+  labs(x='alcohol (% by volume)')
+summary(df$alcohol)
+table(df$alcohol)
+```
+
+#### 数据集中酒精浓度主要介于9到13之间，但是在9~13之间有少数酒精浓度的数量很少。
+```{r}
+ggplot(aes(fixed.acidity),data=df)+geom_histogram()+
+  ggtitle('fixed.scidity shape')+
+  labs(x='fixed acidity (tartaric acid - g / dm^3)')+
+  scale_x_continuous(breaks = seq(4,16,1))
+```
+
+####数据集中fixd.acidity的浓度大多介于6~10.
+```{r}
+ggplot(aes(volatile.acidity),data=df)+geom_histogram()+
+  ggtitle('volatile.acidity')+
+  labs(x='volatile acidity (acetic acid - g / dm^3)')+
+  scale_x_continuous(breaks=seq(0,1.2,0.1))
+```
+```{r}
+ggplot(aes(citric.acid),data=df)+geom_histogram()+
+  labs(x='citric acid (g / dm^3)')+
+  ggtitle('citric.acid')
+```
+```{r}
+ggplot(aes(residual.sugar),data=df)+geom_histogram()+
+  ggtitle('residual.sugar shape')+
+  labs(x='residual sugar (g / dm^3)')+
+  scale_x_continuous(limits = c(0,8),breaks = seq(0,8,0.5))
+```
+```{r}
+ggplot(aes(chlorides),data=df)+geom_histogram()+
+  ggtitle('chlorides shape')+
+  labs(x='chlorides (sodium chloride - g / dm^3')+
+  scale_x_continuous(breaks = seq(0,0.2,0.01),limits = c(0,0.2))
+```
+
+#### 氯化物浓度主要在0.04到0.12之间。
+```{r}
+ggplot(aes(free.sulfur.dioxide),data=df)+geom_histogram()+
+  ggtitle('free.sulfur.dioxide shape')+
+  labs(x='free sulfur dioxide (mg / dm^3)')+
+  scale_x_continuous(breaks = seq(0,60,5))
+```
+
+#### 游离二氧化硫浓度主要在5~35之间。
+```{r}
+ggplot(aes(total.sulfur.dioxide),data=df)+geom_histogram()+
+  ggtitle('total.sulfur.dioxide shape')+
+  labs(x='total sulfur dioxide (mg / dm^3)')+
+  scale_x_continuous(limits = c(0,200),breaks = seq(0,200,10))
+```
+
+####数据集中总的二氧化硫浓度主要在10~100之间。
+```{r}
+ggplot(aes(density),data=df)+geom_histogram()+
+  ggtitle('density shape')+
+  labs(x='density (g / cm^3)')
+```
+
+####数据集中的红酒密度大多在0.995~1.000间，这其中只有几种密度是数量最多的。
+```{r}
+ggplot(aes(pH),data=df)+geom_histogram()+ggtitle('pH shape')
+```
+
+####数据集中红酒pH值大多介于3~3.5之间。
+```{r}
+ggplot(aes(sulphates),data=df)+geom_histogram()+
+  ggtitle('sulphates shape')+
+  scale_x_continuous(breaks = seq(0,1.5,0.1))
+```
+
+####数据集中硫酸盐浓度在0.4~1.0之间。
+## 单变量分析
+### What is the structure of your dataset?
+
+#### 数据集中有1599行红酒数据，12列化学成分和一列质量评分。
+   低------>高
+质量：0(非常差) —— 10(非常好)
+
+####其他观察：
+ pH值：大多呈酸性，在3~3.5之间。
+ 酒精：大多酒精浓度在9~13之间。
+
+### What is/are the main feature(s) of interest in your dataset?
+#### 主要功能是红酒质量与化学成分的关系。探究哪些化学成分影响这酒的质量高低。
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+挥发性酸、柠檬酸、氯化物、硫酸盐可能影响着红酒的质量。
+### Did you create any new variables from existing variables in the dataset?
+暂时没有。
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+
+在红酒密度的直方图中，个别几种的密度情况却占据了大多数数量，离散程度大。
+
+在酒精的直方图中，酒精浓度主要介于9到13之间，但是在9~13之间有少数酒精浓度的数量很少，猜测是标准的酒精浓度介于9~13间，且不连续。
+
+
+
+
+# 探索双变量部分
+
+```{r echo=FALSE, Bivariate_Plots}
+library(ggplot2)
+library(GGally)
+```
+
+```{r fig.width=15,fig.height=15 }
+theme_set(theme_minimal(8))
+set.seed(1836)
+#df<-subset(df,select=-X)
+ggpairs(df[sample.int(nrow(df),1000),],upper=list(continous=wrap('cor',size=3))) #加载散点图矩阵，大概看下相关性。
+```
+
+```{r}
+theme_set(theme_minimal(16))
+ggplot(aes(x=factor(quality),y=alcohol),data=df)+
+  geom_jitter(alpha=0.1)+
+  geom_boxplot(alpha=0.1,color='blue')+
+  stat_summary(fun.y='mean',geom='point',color='red')+
+  labs(x='alcohol (% by volume)',y='quality levels',title=' boxplot of alcohol along each quality levels')
+```
+
+####质量主要在5，6，7三种中。酒精浓度主要在9~13之间。在一定范围内，酒精浓度增加，酒的质量也在增加。
+```{r}
+#固定酸度与密度之间关系，并输出相关系数。
+ggplot(aes(x=fixed.acidity,y=density),data=df)+
+  geom_point(alpha=0.1,position = position_jitter())+
+  labs(x='fixed acidity (tartaric acid - g / dm^3)',y='density (g / cm^3)',title='density vs fixed.acidity' )
+with(df,cor.test(fixed.acidity,y=density,method = 'pearson'))
+```
+
+####固定酸度与密度呈线性关系，固定酸度浓度增加，密度也增加。红酒密度大部分在0.995至1.00之间。
+
+
+
+```{r}
+#固定酸度与柠檬酸之间关系。
+ggplot(aes(x=fixed.acidity,y=citric.acid),data=df)+
+  geom_point(alpha=0.15,position=position_jitter())+
+  labs(x='fixed acidity (tartaric acid - g / dm^3)',y='citric acid (g / dm^3)',title='fixed.acidity vs citric.acid')+
+  xlim(4,14)
+with(df,cor.test(fixed.acidity,citric.acid,method = 'pearson'))
+
+```
+
+
+####从散点图矩阵中观察，这变量关系是这个数据中相关性最强的，cor=0.6717。固定酸的浓度越高，则柠檬酸的浓度也越高。但有多种情况下，柠檬酸浓度为零。
+```{r}
+#固定酸与pH值之间关系
+ggplot(aes(x=fixed.acidity,y=pH),data=df)+
+  geom_point(alpha=0.1,position = position_jitter())+
+  labs(x='fixed acidity (tartaric acid - g / dm^3)',y='pH',title='fixed.acidity vs pH')
+with(df,cor.test(fixed.acidity,pH,method = 'pearson'))
+```
+
+####在质量为5~7的红酒中，随着固定酸度浓度的增加，红酒的pH值在减小，两者呈负相关。
+```{r}
+#挥发性酸与柠檬酸之间关系。
+ggplot(aes(x=volatile.acidity,y=citric.acid),data=df)+
+  geom_point(alpha=0.3,position = position_jitter())+
+  xlim(0,quantile(df$volatile.acidity,0.95))+
+  ylim(0,quantile(df$citric.acid,0.95))+
+  labs(x='volatile acidity (acetic acid - g / dm^3)',y='citric acid (g / dm^3)',title='volatile.acidity vs citric.acid')
+with(df,cor.test(volatile.acidity,citric.acid,method = 'pearson'))
+```
+
+##### 质量为5~7的红酒中，挥发性酸与柠檬酸呈负相关性，cor=-0.5484.
+```{r}
+#游离二氧化硫与总体二氧化硫之间关系。
+ggplot(aes(x=free.sulfur.dioxide,y=total.sulfur.dioxide),data=df)+
+  geom_point(alpha=0.3,position = position_jitter())+
+  xlim(0,quantile(df$free.sulfur.dioxide,0.95))+
+  ylim(0,quantile(df$total.sulfur.dioxide,0.95))+
+  labs(x='free sulfur dioxide (mg / dm^3)',y='total sulfur dioxide (mg / dm^3)',title='free.sulfur.dioxide vs total.sulfur.dioxide')
+with(df,cor.test(free.sulfur.dioxide,total.sulfur.dioxide,method = 'pearson'))
+```
+
+#### 在游离二氧化硫浓度在2.5~25之间，游离二氧化硫与总体二氧化硫呈很强的线性关系，但有垂直带，相同游离二氧化硫浓度下，总体二氧化硫有很多值。
+```{r}
+#酒精浓度与密度关系。
+ggplot(aes(x=alcohol,y=density),data=df)+
+  geom_point(alpha=0.3,position = position_jitter())+
+  labs(x='alcohol (% by volume)',y='density (g / cm^3)',title='alcohol vs density')
+with(df,cor.test(alcohol,density,method = 'pearson'))
+```
+
+####在质量为5~7的红酒数据集中，酒精与密度呈负相关，其相关系数为-0.4917。
+
+```{r echo=FALSE, Multivariate_Plots}
+#在各种质量下，分别查看每种的固定酸度描述值是多少。
+ggplot(df, aes(x=interaction(quality), y=fixed.acidity)) + geom_boxplot(alpha=0.5)+geom_jitter(alpha=0.3)+labs(x='quality',y='fixed acidity (tartaric acid - g / dm^3)',title='quality vs fixed.acidity')
+by(df$fixed.acidity,df$quality,summary)
+```
+
+####各种质量下，quality为5，6，7的三种质量数据最多，Median值在7.8到8.8之间。
+
+```{r}
+
+#在各种质量下，查看残留糖的各种值。
+ggplot(df, aes(x=factor(quality),y=residual.sugar)) + geom_boxplot(alpha=0.5)+
+  geom_jitter(alpha=0.3)+labs(x='quality',y='residual sugar (g / dm^3)',title='quality vs residual sugar')
+by(df$residual.sugar,df$quality,summary)
+
+```
+
+####在各种质量下，查看残留糖的各种统计量，数据主要集中在5，6，7三种质量上。
+
+```{r}
+#在各种质量下，查看氯化物的各种值
+ggplot(df, aes(x=interaction(quality), y=chlorides)) + geom_boxplot(alpha=0.5)+
+  geom_jitter(alpha=0.3)
+by(df$chlorides,df$quality,summary)
+```
+
+####在各种质量下，查看氯化物的各种值。Median的主要范围在0.0730到0.0810间。
+
+```{r}
+#在各种质量下，查看总二氧化硫的各种值。
+ggplot(df, aes(x=factor(quality), y=total.sulfur.dioxide)) + geom_boxplot(alpha=0.5)+
+  geom_jitter(alpha=0.3)+
+  labs(x='quality',y='total sulfur dioxide (mg / dm^3)',title='value of total sulfur dioxide')
+by(df$total.sulfur.dioxide,df$quality,summary)
+```
+
+####在各种质量下，查看总二氧化硫的各种值，主要集中在5，6，7上，大多数的总二氧化硫是低于中值的。
+
+```{r}
+#在各种质量下，查看硫酸盐的的各种值。
+ggplot(df, aes(x=factor(quality), y=sulphates)) + geom_boxplot(alpha=0.5)+
+  geom_jitter(alpha=0.3)+
+  labs(x='quality',y='sulphates (potassium sulphate - g / dm3)',title='value of sulphates')
+by(df$sulphates,df$quality,summary)
+```
+
+#### 在各种质量下，查看硫酸盐的的各种值，Median主要范围在0.58到0.74间。
+
+## 双变量分析
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+这11个变量中，density、pH、quality三个变量属于因变量，由其他9个自变量影响。
+发现关系(呈强相关性的)：固定酸度与密度(0.65)，柠檬酸(0.652)呈正相关，与pH值呈负                         相关(-0.525)。
+                        挥发性酸与柠檬酸呈负相关（cor=-0.554）。
+                        游离二氧化硫与总二氧化硫呈正相关(0.676)。
+                        酒精与密度呈负相关(-0.516)。
+                        酒精与红酒质量呈正相关。
+                        
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+发现残留糖可能是呈碱性，残留糖的浓度与所有的酸都呈负相关。
+### What was the strongest relationship you found?
+
+我找到的最强关系是游离二氧化硫与总二氧化硫的关系，相关系数为0.676。
+
+
+
+# 多变量部分
+```{r}
+#在5~7的质量下，酒精与密度关系。
+#df$quality<-as.character(df$quality) #先把quality列转换为类别列
+#ggplot(df,aes(alcohol,density))+
+#  geom_smooth(aes(color=quality))
+ggplot(aes(x=alcohol,y=density,color=factor(quality)),data=df)+
+  geom_jitter(alpha=0.2)+
+  scale_color_brewer(palette = 'Blues')+
+  geom_smooth()+#绘制线性趋势图
+  ylim(0.985,1.005)+
+  labs(x='alcohol (% by volume)',
+       y='density (g / cm^3)')
+  ggtitle('density vs alcohol vs quality')
+  
+```
+
+####在各种的质量情况下，随着酒精浓度的增加，密度亦随之减小。大体上是呈负相关性。
+```{r}
+ggplot(df,aes(residual.sugar,pH,color=factor(quality)))+
+  geom_jitter()+
+  geom_smooth(method = 'lm',se=FALSE,size=1)+
+  scale_color_brewer(palette='Red')+
+  ggtitle('pH vs residual.sugar vs quality')+
+  labs(x='residual sugar (g / dm^3)',y='pH')
+```
+
+#### 在各种质量下，pH值随残留糖变化的情况。在质量为3的情况下，residual.sugar与pH呈正相关，其他质量下都呈负相关性。
+
+```{r}
+
+ggplot(df,aes(fixed.acidity,density,color=factor(quality)))+
+  geom_point()+
+  scale_color_brewer(palette = 'Blue')+
+  ggtitle('fixed.acidity vs density vs quality')+
+  labs(x='fixed acidity (tartaric acid - g / dm^3)',y='density (g / cm^3)')
+  
+```
+
+
+####图中是固定酸度与密度在各种质量下的关系，当固定酸度上确定一点时，质量越高其密度越低。总体上看，固定酸度与密度是正相关的。
+
+# 多变量分析
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+在这部分我主要查看了高质量的红酒的各种化学元素浓度值范围，来帮助大家更好的来预测红酒是否能被评为高质量红酒。
+
+### Were there any interesting or surprising interactions between features?
+
+在质量为5，6,7的情况下，随着酒精浓度的增加，密度亦随之减小，但是质量为5时，密度有上升趋势。
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
+
+------
+
+# 最后总结
+
+### 图一
+
+```{r echo=FALSE, Plot_One}
+ggplot(aes(x=alcohol,y=density,color=factor(quality)),data=df)+
+  geom_jitter()+
+  scale_color_brewer(palette = 'Blues')+
+  geom_smooth()+#绘制线性趋势图
+  ylim(0.985,1.005)+
+  ggtitle('density vs alcohol vs quality')+
+  labs(x='alcohol (% by volume)',y='density (g / cm^3)')
+```
+
+### 描述： 
+
+按理说，quality=5时，其密度应该岁酒精增加而减小，可是当超过alcohol大于13时，反而上升。
+
+### 图二
+
+```{r echo=FALSE, Plot_Two}
+ggplot(df,aes(residual.sugar,pH))+
+  geom_smooth(aes(color=quality))+
+  labs(title='PH of residual.sugar by quality')+
+  labs(x='residual sugar (g / dm^3)',y='pH')
+```
+
+### 描述：
+
+本来认为糖是呈中性，糖浓度高了，酸度浓度就低了，所以pH值增加。但为什么在pH0~2时呈相反结果？
+
+### 图三
+
+```{r echo=FALSE, Plot_Three}
+ggplot(df,aes(fixed.acidity,density,color=factor(quality)))+
+  geom_point()+
+  scale_color_brewer(palette = 'Blue')+
+  ggtitle('fixed.acidity vs density vs quality')+
+  labs(x='fixed acidity (tartaric acid - g / dm^3)',y='density (g / cm^3)')
+```
+
+### 描述：
+
+  保持固定酸度浓度恒定，具有更高质量的红酒总体上比较低质量的红酒的密度更低。
+  
+------
+
+# 反思：
+
+红酒数据集包含了13个变量中1599行的红酒信息。我首先了解了数据集中的各个变量，然后在继续对图表进行观察时，我探索了有趣的问题和线索。最后，我探讨了许多变量与红酒质量的关系，并估出了高质量红酒的各种化学成分范围：
+ fixed.acidity:  7.80~8.80
+ residual.sugar: 2.20~2.30
+ chlorides:      0.081~0.073
+ total.sulfur.dioxide: 21.5~47
+ sulphates:      0.58~0.74
+ 只要红酒的化学元素在这些范围之内，则红酒质量就不会偏低。
+ 
+在分析过程中，不知道到底哪些变量影响着红酒的品质，只能用ggpairs函数，把所有变量关系都列出来，找到相关系数偏大的变量。
+对此数据集，以后还可以用来预测红酒的质量，但前提是数据集数据合适，且处理完善，预测方法准确，这样就能自动检测红酒品质了。
